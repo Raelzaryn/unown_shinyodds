@@ -202,6 +202,9 @@ tr.is-current > td, tr.is-current > th { border-color: var(--hl-border); }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 [id] { scroll-margin-top: 1rem; }
+.order-table td { text-align: left; }
+.calc-hint[hidden] { display: none; }
+.calc-hint { margin: 1rem 0 0; padding-top: .75rem; border-top: 1px solid var(--rule); text-align: center; font-size: .88rem; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -229,7 +232,7 @@ html { scroll-behavior: smooth; }
 
 <section class="calc" aria-labelledby="calc-title">
 <h3 id="calc-title">IDUV calculator</h3>
-<p class="calc-note">Enter your Trainer ID and Secret ID (both 0 to 65535). The result updates as you type.</p>
+<p class="calc-note">Enter your Trainer ID and Secret ID (both 0 to 65535). Leading 0s can be left out, so a TID shown in-game as 00421 can be entered as 421. The result updates as you type.</p>
 <div class="calc-fields">
 <label>Trainer ID (TID)<input id="tid" type="number" inputmode="numeric" min="0" max="65535" step="1" placeholder="0–65535"></label>
 <label>Secret ID (SID)<input id="sid" type="number" inputmode="numeric" min="0" max="65535" step="1" placeholder="0–65535"></label>
@@ -238,6 +241,7 @@ html { scroll-behavior: smooth; }
 <p id="calc-out" class="calc-value">IDUV = –</p>
 <p id="calc-detail" class="calc-detail"></p>
 </div>
+<p id="calc-hint" class="calc-hint">Once you enter your TID and SID, the rows for your IDUV are highlighted in the <a href="#best-iduv-heading">Best IDUV for rare forms</a> table and in every <a href="#chamber-tables">chamber table</a>, so you can see your odds for each hunt at a glance.</p>
 </section>
 
 <h2 id="best-iduv-heading">Best IDUV for rare forms</h2>
@@ -479,6 +483,8 @@ html { scroll-behavior: smooth; }
 
 <p>If you hunt with several game instances at the same time (one save file each), every instance keeps its IDUV for the whole hunt, but can move on to another chamber once its forms there are caught. The table below shows, for 1 to 10 instances, the IDUV mix that catches all 28 forms as shinies in the shortest time. “Encounters per instance” is that time: how many encounters each instance has to do until the collection is complete. “Encounters in total” adds up all instances.</p>
 
+<p><strong>Keep in mind that all of this only considers the average expected number of encounters. Real results can vary a lot depending on luck.</strong> Any single shiny form takes longer than its average about 37% of the time, and about 1 in 20 of these hunts takes three times as long or more. Just as well, a lucky hunter may find the rarest forms after a fraction of these numbers. If the hunt for a rare form ends much sooner than expected, it can be worth restarting that game to get a new IDUV (after trading your shinies to another save), so the instance can help with the chambers that are still incomplete.</p>
+
 <div class="table-wrap"><table>
 <thead><tr><th>Instances</th><th>IDUV 0</th><th>IDUV 1</th><th>IDUV 3</th><th>Encounters per instance</th><th>Encounters in total</th></tr></thead>
 <tbody>
@@ -499,9 +505,20 @@ html { scroll-behavior: smooth; }
 
 <p>The roles of the IDUVs hardly change with the number of instances. IDUV 1 covers the Monean and Viapois Chambers, where ? and ! only appear 1% of the time but have shiny odds of 1/6144, as well as the Weepth Chamber. These are the slowest chambers to complete, which is why most instances should have IDUV 1. IDUV 3 covers the Liptoo, Dilford and Scufib Chambers, and IDUV 0 covers the Rixy Chamber (B at 1/5120) and, with few instances, part of the Liptoo Chamber. IDUV 2 is never part of the best mix. With 2 instances, the IDUV 3 instance also takes the Rixy Chamber; with 3 instances, the IDUV 0 instance takes the Liptoo, Dilford and Rixy Chambers and the two IDUV 1 instances take the rest.</p>
 
+<p>In short, each IDUV works through its chambers in this order, starting with the ones that take longest. If you have several instances with the same IDUV, start them all in the first chamber of their row and move them on together as soon as the last missing form there is caught. Together they complete each chamber as fast as possible, and no instance is left waiting while another one is still stuck on its last form.</p>
+
+<div class="table-wrap"><table class="order-table">
+<thead><tr><th>IDUV</th><th>Chambers, in order</th></tr></thead>
+<tbody>
+<tr class="alt"><th class="iduv">IDUV 1</th><td>Monean → Viapois → Weepth → helps with Scufib</td></tr>
+<tr><th class="iduv">IDUV 3</th><td>Liptoo → Scufib → Dilford</td></tr>
+<tr class="alt"><th class="iduv">IDUV 0</th><td>Rixy → helps with Liptoo</td></tr>
+</tbody>
+</table></div>
+
 <p>Adding instances shortens the hunt almost in proportion: doubling the number of instances roughly halves the time, while the total number of encounters barely changes. The exact mix matters much less than the number of instances; from 4 instances on, the best mix is usually only 1 to 3% faster than the next best one.</p>
 
-<p>These figures are averages, calculated from the shiny odds in the chamber tables and the encounter rates in the index below. They assume that the work is spread evenly, so that all instances finish at about the same time. In practice each instance finishes at a random point and you wait for the last one, so expect the real hunt to take noticeably longer.</p>
+<p>These figures are averages, calculated from the shiny odds in the chamber tables and the encounter rates in the index below. They assume that every instance stays busy until the very end. Keeping instances with the same IDUV together avoids most waiting, but the groups with different IDUVs still finish their chambers at random points, and the hunt is only over when the last chamber is complete. A group that finishes early can help in a chamber that is still running, but its IDUV may give worse odds there, so expect the real hunt to take longer than these figures.</p>
 
 <h2 id="encounter-rates">Index: encounter rates</h2>
 
@@ -532,6 +549,7 @@ html { scroll-behavior: smooth; }
   var sid = document.getElementById('sid');
   var out = document.getElementById('calc-out');
   var detail = document.getElementById('calc-detail');
+  var hint = document.getElementById('calc-hint');
 
   function read(input) {
     var v = input.value.trim();
@@ -579,12 +597,14 @@ html { scroll-behavior: smooth; }
       out.textContent = 'IDUV = –';
       detail.textContent = 'Enter both IDs to see your IDUV.';
       highlight(null);
+      if (hint) hint.hidden = false;
       return;
     }
     if (isNaN(t) || isNaN(s)) {
       out.textContent = 'IDUV = –';
       detail.textContent = 'Both IDs must be whole numbers from 0 to 65535.';
       highlight(null);
+      if (hint) hint.hidden = false;
       return;
     }
     var x = t ^ s;
@@ -595,6 +615,7 @@ html { scroll-behavior: smooth; }
       bits.slice(0, 6) + '<span class="bit bit-orange">' + bits.slice(6, 8) + '</span> ' + bits.slice(8) +
       '</span><sub>(2)</sub>. <a href="#chamber-tables">See your odds in the chamber tables</a>. Your IDUV is highlighted in all tables.';
     highlight(iduv);
+    if (hint) hint.hidden = true;
   }
 
   tid.addEventListener('input', update);
